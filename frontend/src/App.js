@@ -1,9 +1,10 @@
 import React from 'react';
 import Chat from './Chat';
 
+
 function App() {
   return (
-    <div>
+    <div className="App premium-bg" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <Chat />
     </div>
   );

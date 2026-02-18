@@ -11,10 +11,10 @@ app.use(cors()); // Enable CORS
 const io = new Server(server, {
   cors: {
     origin: [
-  "https://real-time-chat-9dzt90nbe-dikshas-projects-16e6234b.vercel.app",
-  "https://real-time-chat-app-weld.vercel.app"
-],
- // Your React frontend
+      "http://localhost:3000",
+      "https://real-time-chat-9dzt90nbe-dikshas-projects-16e6234b.vercel.app",
+      "https://real-time-chat-app-weld.vercel.app"
+    ],
     methods: ["GET", "POST"]
   }
 });

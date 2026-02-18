@@ -1,48 +1,115 @@
-import React, { useEffect, useState } from "react";
-import io from "socket.io-client";
 
-const socket = io("https://chat-backend-0474.onrender.com");
+import React, { useEffect, useRef, useState } from "react";
+import io from "socket.io-client";
+import "./Chat.css";
+
+const socket = io("http://localhost:5000");
+
+const getInitials = (name) => {
+  if (!name) return "U";
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase();
+};
 
 const Chat = () => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
+  const [username, setUsername] = useState("");
+  const [showNamePrompt, setShowNamePrompt] = useState(true);
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
     socket.on("receive_message", (data) => {
-      console.log("📥 New message:", data);
       setMessages((prev) => [...prev, data]);
     });
-
     return () => {
       socket.off("receive_message");
     };
   }, []);
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   const sendMessage = () => {
-    if (message.trim()) {
-      console.log("Sending message:", message);
-      socket.emit("send_message", message);
+    if (message.trim() && username) {
+      socket.emit("send_message", { text: message, user: username });
       setMessage("");
     }
   };
 
-  return (
-    <div>
-      <h2>Chat</h2>
-      <div style={{ border: "1px solid gray", height: "200px", overflowY: "scroll", marginBottom: "10px", padding: "10px" }}>
-        {messages.map((msg, index) => (
-          <div key={index}>💬 {msg}</div>
-        ))}
+  const handleInputKeyDown = (e) => {
+    if (e.key === "Enter") {
+      sendMessage();
+    }
+  };
+
+  const handleNameSubmit = (e) => {
+    e.preventDefault();
+    if (username.trim()) {
+      setShowNamePrompt(false);
+    }
+  };
+
+  if (showNamePrompt) {
+    return (
+      <div className="chat-overlay premium-bg">
+        <form className="chat-name-form glassmorph" onSubmit={handleNameSubmit}>
+          <h2 className="premium-title">Welcome to Chat Room</h2>
+          <input
+            type="text"
+            placeholder="Enter your name"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            autoFocus
+          />
+          <button type="submit">Join</button>
+        </form>
       </div>
-      <input
-        type="text"
-        id="chat-message"
-        name="chatMessage"
-        value={message}
-        placeholder="Type your message..."
-        onChange={(e) => setMessage(e.target.value)}
-      />
-      <button onClick={sendMessage}>Send</button>
+    );
+  }
+
+  return (
+    <div className="chat-container premium-bg glassmorph">
+      <header className="chat-header premium-header">
+        <span className="premium-logo">💬</span> Chat Room
+      </header>
+      <div className="chat-messages">
+        {messages.map((msg, index) => {
+          const isOwn = msg.user === username;
+          return (
+            <div
+              key={index}
+              className={`chat-bubble${isOwn ? " own" : ""}`}
+              style={{ animationDelay: `${index * 40}ms` }}
+            >
+              <div className="chat-avatar">{getInitials(msg.user)}</div>
+              <div className="chat-content">
+                <span className="chat-user">{msg.user || "User"}</span>
+                <span className="chat-text">{msg.text || msg}</span>
+              </div>
+            </div>
+          );
+        })}
+        <div ref={messagesEndRef} />
+      </div>
+      <div className="chat-input-row">
+        <input
+          type="text"
+          className="chat-input"
+          value={message}
+          placeholder="Type your message..."
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={handleInputKeyDown}
+          autoFocus
+        />
+        <button className="chat-send-btn" onClick={sendMessage} disabled={!message.trim()}>
+          Send
+        </button>
+      </div>
     </div>
   );
 };
