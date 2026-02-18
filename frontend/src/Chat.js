@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 import "./Chat.css";
 
-const socket = io(import.meta.env.VITE_API_URL);
+const socket = io(process.env.REACT_APP_API_URL);
 
 const getInitials = (name) => {
   if (!name) return "U";
